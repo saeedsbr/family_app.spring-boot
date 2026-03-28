@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,5 +46,31 @@ public class MeterAccessController {
 
         UUID meterId = UUID.fromString(meterIdStr);
         return ResponseEntity.ok(meterAccessService.inviteUserByEmail(meterId, email, userDetails.getId()));
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<MeterAccessResponse>> getPendingRequests(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(meterAccessService.getPendingRequestsForOwner(userDetails.getId()));
+    }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<MeterAccessResponse> approveRequest(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(meterAccessService.approveRequest(userDetails.getId(), id));
+    }
+
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<MeterAccessResponse> rejectRequest(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(meterAccessService.rejectRequest(userDetails.getId(), id));
+    }
+
+    @GetMapping("/my-requests")
+    public ResponseEntity<List<MeterAccessResponse>> getMyRequests(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(meterAccessService.getMyRequests(userDetails.getId()));
     }
 }

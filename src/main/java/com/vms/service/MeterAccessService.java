@@ -80,6 +80,60 @@ public class MeterAccessService {
         return mapToResponse(access);
     }
 
+    @Transactional
+    public MeterAccessResponse approveRequest(UUID ownerId, UUID requestId) {
+        MeterAccess access = meterAccessRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Access request not found"));
+
+        if (!access.getMeter().getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("Only the meter owner can approve access requests");
+        }
+
+        access.setAccessStatus(MeterAccess.AccessStatus.APPROVED);
+        return mapToResponse(meterAccessRepository.save(access));
+    }
+
+    @Transactional
+    public MeterAccessResponse rejectRequest(UUID ownerId, UUID requestId) {
+        MeterAccess access = meterAccessRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Access request not found"));
+
+        if (!access.getMeter().getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("Only the meter owner can reject access requests");
+        }
+
+        access.setAccessStatus(MeterAccess.AccessStatus.REJECTED);
+        return mapToResponse(meterAccessRepository.save(access));
+    }
+
+    public List<MeterAccessResponse> getPendingRequestsForOwner(UUID ownerId) {
+        return meterAccessRepository.findByMeterOwnerIdAndAccessStatus(ownerId, MeterAccess.AccessStatus.PENDING)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<MeterAccessResponse> getMyRequests(UUID userId) {
+        return meterAccessRepository.findByUserAndAccessStatus(
+                userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")),
+                MeterAccess.AccessStatus.PENDING).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public boolean canUserAccessMeter(UUID userId, UUID meterId) {
+        Meter meter = meterRepository.findById(meterId).orElse(null);
+        if (meter == null)
+            return false;
+
+        if (meter.getOwner().getId().equals(userId))
+            return true;
+
+        return meterAccessRepository.findByUserIdAndMeterId(userId, meterId)
+                .map(access -> access.getAccessStatus() == MeterAccess.AccessStatus.APPROVED)
+                .orElse(false);
+    }
+
     // Leveraging existing VehicleAccessResponse DTO for standardizing the access
     // response shape
     private MeterAccessResponse mapToResponse(MeterAccess access) {
