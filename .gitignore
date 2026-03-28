@@ -1,0 +1,46 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/resources/*.yaml
+!**/src/test/resources/*.yaml
+!**/src/main/resources/*.yml
+!**/src/test/resources/*.yml
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/resources/archetype-resources/google_checkstyle.xml
+
+### VS Code ###
+.vscode/
+
+### Logs ###
+*.log
+backend.log
+backend_new.log
+spring_boot.log
+backend_java17*.log
+
+### Database ###
+*.mv.db
+*.trace.db
+vmsdb.mv.db
+vmsdb.trace.db
