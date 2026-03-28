@@ -26,4 +26,7 @@ public interface FuelLogRepository extends JpaRepository<FuelLog, UUID> {
                         "ORDER BY f.logDate DESC")
         List<FuelLog> findRecentLogsByUserId(@Param("userId") UUID userId,
                         @Param("status") VehicleAccess.AccessStatus status);
+
+        @Query("SELECT COALESCE(SUM(f.totalCost), 0.0) FROM FuelLog f WHERE f.vehicle.user.id = :userId")
+        Double sumTotalCostByOwnerId(@Param("userId") UUID userId);
 }

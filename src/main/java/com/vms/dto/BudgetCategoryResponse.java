@@ -1,5 +1,6 @@
 package com.vms.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,5 +12,6 @@ public class BudgetCategoryResponse {
     private UUID id;
     private String name;
     private String color;
+    @JsonProperty("isSystem")
     private boolean isSystem;
 }

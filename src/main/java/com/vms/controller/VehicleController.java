@@ -1,7 +1,11 @@
 package com.vms.controller;
 
+import com.vms.dto.VehicleExpenseSummaryResponse;
 import com.vms.dto.VehicleRequest;
 import com.vms.dto.VehicleResponse;
+import com.vms.repository.FuelLogRepository;
+import com.vms.repository.MaintenanceLogRepository;
+import com.vms.repository.VehicleRepository;
 import com.vms.security.UserDetailsImpl;
 import com.vms.service.VehicleService;
 import jakarta.validation.Valid;
@@ -20,6 +24,9 @@ import java.util.UUID;
 public class VehicleController {
 
     private final VehicleService vehicleService;
+    private final FuelLogRepository fuelLogRepository;
+    private final MaintenanceLogRepository maintenanceLogRepository;
+    private final VehicleRepository vehicleRepository;
 
     @GetMapping
     public ResponseEntity<List<VehicleResponse>> getAll(@AuthenticationPrincipal UserDetailsImpl userDetails) {
@@ -52,6 +59,21 @@ public class VehicleController {
             @PathVariable UUID id) {
         vehicleService.deleteVehicle(userDetails.getId(), id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/expense-summary")
+    public ResponseEntity<VehicleExpenseSummaryResponse> getExpenseSummary(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        UUID userId = userDetails.getId();
+        double fuelCost = fuelLogRepository.sumTotalCostByOwnerId(userId);
+        double maintenanceCost = maintenanceLogRepository.sumCostByOwnerId(userId);
+        int vehicleCount = vehicleRepository.findByUserId(userId).size();
+        return ResponseEntity.ok(VehicleExpenseSummaryResponse.builder()
+                .totalFuelCost(fuelCost)
+                .totalMaintenanceCost(maintenanceCost)
+                .totalVehicleCost(fuelCost + maintenanceCost)
+                .ownedVehicleCount(vehicleCount)
+                .build());
     }
 
     @PostMapping("/{id}/reset-maintenance")
