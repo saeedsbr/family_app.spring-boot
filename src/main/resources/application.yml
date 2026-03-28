@@ -3,6 +3,18 @@ spring:
     active: dev
   main:
     allow-bean-definition-overriding: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: familysabthinga@gmail.com
+    password: hhxornpaluxlwncd
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
 vms:
   jwt:

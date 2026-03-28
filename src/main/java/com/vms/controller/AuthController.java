@@ -4,13 +4,15 @@ import com.vms.dto.AuthResponse;
 import com.vms.dto.LoginRequest;
 import com.vms.dto.RegisterRequest;
 import com.vms.service.AuthService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -27,5 +29,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        authService.forgotPassword(request.get("email"));
+        return ResponseEntity.ok(Map.of("message", "If an account exists with that email, a password reset link has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        authService.resetPassword(request.get("token"), request.get("newPassword"));
+        return ResponseEntity.ok(Map.of("message", "Password has been reset successfully"));
     }
 }
