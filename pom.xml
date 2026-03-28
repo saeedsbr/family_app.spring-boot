@@ -11,8 +11,8 @@
 	<groupId>com.vms</groupId>
 	<artifactId>vehicle-management-system</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>vehicle-management-system</name>
-	<description>Vehicle Maintenance Tracking System Backend</description>
+	<name>life-pulse</name>
+	<description>Life Pulse Personal Management System Backend</description>
 	<properties>
 		<java.version>17</java.version>
 		<jjwt.version>0.11.5</jjwt.version>
