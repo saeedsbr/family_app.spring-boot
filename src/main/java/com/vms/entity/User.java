@@ -35,6 +35,11 @@ public class User {
     @NotBlank
     private String name;
 
+    @Builder.Default
+    private String currency = "$";
+
+    private String logoUrl;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

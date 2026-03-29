@@ -43,6 +43,8 @@ public class AuthService {
                 .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
+                .currency(request.getCurrency() != null ? request.getCurrency() : "$")
+                .logoUrl(request.getLogoUrl())
                 .build();
 
         user = userRepository.save(user);
@@ -69,6 +71,8 @@ public class AuthService {
                 .id(userDetails.getId())
                 .email(userDetails.getEmail())
                 .name(userDetails.getName())
+                .currency(userDetails.getCurrency())
+                .logoUrl(userDetails.getLogoUrl())
                 .build();
     }
 

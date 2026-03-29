@@ -9,4 +9,5 @@ public class MeterReadingRequest {
     private LocalDate readingDate;
     private BigDecimal readingValue;
     private String notes;
+    private String recordedByManual;
 }

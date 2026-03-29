@@ -73,4 +73,11 @@ public class MeterAccessController {
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseEntity.ok(meterAccessService.getMyRequests(userDetails.getId()));
     }
+
+    @GetMapping("/{meterId}/members")
+    public ResponseEntity<List<MeterAccessResponse>> getMeterMembers(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PathVariable UUID meterId) {
+        return ResponseEntity.ok(meterAccessService.getMeterMembers(meterId, userDetails.getId()));
+    }
 }

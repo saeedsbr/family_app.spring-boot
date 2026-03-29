@@ -18,6 +18,8 @@ public class UserDetailsImpl implements UserDetails {
     private UUID id;
     private String name;
     private String email;
+    private String currency;
+    private String logoUrl;
 
     @JsonIgnore
     private String password;
@@ -31,6 +33,8 @@ public class UserDetailsImpl implements UserDetails {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
+                user.getCurrency(),
+                user.getLogoUrl(),
                 user.getPassword(),
                 authorities);
     }

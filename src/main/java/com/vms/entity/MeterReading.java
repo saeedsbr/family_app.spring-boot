@@ -39,6 +39,9 @@ public class MeterReading {
     @JoinColumn(name = "recorded_by", nullable = false)
     private User recordedBy;
 
+    @Column(name = "recorded_by_manual")
+    private String recordedByManual;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

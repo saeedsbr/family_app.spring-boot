@@ -15,6 +15,7 @@ public class MeterReadingResponse {
     private BigDecimal readingValue;
     private BigDecimal consumption;
     private String notes;
+    private String recordedByManual;
     private String recordedByName;
     private UUID recordedBy;
 }

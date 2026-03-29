@@ -113,6 +113,20 @@ public class MeterAccessService {
                 .collect(Collectors.toList());
     }
 
+    public List<MeterAccessResponse> getMeterMembers(UUID meterId, UUID ownerId) {
+        Meter meter = meterRepository.findById(meterId)
+                .orElseThrow(() -> new RuntimeException("Meter not found"));
+
+        if (!meter.getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("Only the meter owner can view members");
+        }
+
+        return meterAccessRepository.findByMeterIdAndAccessStatus(meterId, MeterAccess.AccessStatus.APPROVED)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     public List<MeterAccessResponse> getMyRequests(UUID userId) {
         return meterAccessRepository.findByUserAndAccessStatus(
                 userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")),
