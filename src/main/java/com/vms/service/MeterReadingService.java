@@ -87,7 +87,7 @@ public class MeterReadingService {
                                 .map(req -> {
                                         MeterReadingRequest r = new MeterReadingRequest();
                                         r.setReadingValue(java.math.BigDecimal.valueOf(req.getReadingValue()));
-                                        r.setReadingDate(java.time.LocalDateTime.parse(req.getReadingDate()));
+                                        r.setReadingDate(java.time.LocalDate.parse(req.getReadingDate().substring(0, 10)));
                                         r.setRecordedByManual(req.getRecordedByManual());
                                         r.setNotes(req.getNotes());
                                         return submitReading(req.getMeterId(), r, userId);

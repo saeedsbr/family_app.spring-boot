@@ -149,6 +149,27 @@ public class ReportService {
                 };
         }
 
+        private String formatPeriod(LocalDateTime date, String period) {
+                DateTimeFormatter formatter = switch (period.toLowerCase()) {
+                        case "day" -> DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        case "week" -> DateTimeFormatter.ofPattern("yyyy-'W'ww");
+                        case "month" -> DateTimeFormatter.ofPattern("yyyy-MM");
+                        case "year" -> DateTimeFormatter.ofPattern("yyyy");
+                        default -> DateTimeFormatter.ofPattern("yyyy-MM");
+                };
+                return date.format(formatter);
+        }
+
+        private LocalDateTime incrementDate(LocalDateTime date, String period) {
+                return switch (period.toLowerCase()) {
+                        case "day" -> date.plusDays(1);
+                        case "week" -> date.plusWeeks(1);
+                        case "month" -> date.plusMonths(1);
+                        case "year" -> date.plusYears(1);
+                        default -> date.plusMonths(1);
+                };
+        }
+
         private Map<String, List<FuelLog>> groupByPeriod(List<FuelLog> logs, String period) {
                 DateTimeFormatter formatter = switch (period.toLowerCase()) {
                         case "day" -> DateTimeFormatter.ofPattern("yyyy-MM-dd");
