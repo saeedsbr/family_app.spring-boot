@@ -36,6 +36,9 @@ public class Vehicle {
     private Integer modelYear;
     private String licensePlate;
 
+    @Builder.Default
+    private String currency = "$";
+
     private Integer currentOdometer;
 
     private Integer lastServiceOdometer;

@@ -15,6 +15,7 @@ public class VehicleResponse {
     private String model;
     private Integer modelYear;
     private String licensePlate;
+    private String currency;
     private Integer currentOdometer;
     private Integer lastServiceOdometer;
     private MaintenanceStatus maintenanceStatus;

@@ -69,6 +69,7 @@ public class VehicleService {
                         : null)
                 .currentOdometer(request.getInitialOdometer() != null ? request.getInitialOdometer() : 0)
                 .lastServiceOdometer(request.getInitialOdometer() != null ? request.getInitialOdometer() : 0)
+                .currency(request.getCurrency() != null ? request.getCurrency() : "$")
                 .user(user)
                 .build();
 
@@ -147,6 +148,7 @@ public class VehicleService {
                 .licensePlate(vehicle.getLicensePlate())
                 .currentOdometer(vehicle.getCurrentOdometer())
                 .lastServiceOdometer(vehicle.getLastServiceOdometer())
+                .currency(vehicle.getCurrency())
                 .maintenanceStatus(status)
                 .build();
     }
