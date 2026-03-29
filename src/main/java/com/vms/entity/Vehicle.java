@@ -39,6 +39,7 @@ public class Vehicle {
     @Builder.Default
     private String currency = "$";
 
+    private Integer initialOdometer;
     private Integer currentOdometer;
 
     private Integer lastServiceOdometer;

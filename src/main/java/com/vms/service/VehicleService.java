@@ -67,7 +67,8 @@ public class VehicleService {
                 .licensePlate(request.getLicensePlate() != null
                         ? request.getLicensePlate().trim().toUpperCase()
                         : null)
-                .currentOdometer(request.getInitialOdometer() != null ? request.getInitialOdometer() : 0)
+                .initialOdometer(request.getInitialOdometer())
+                .currentOdometer(request.getInitialOdometer())
                 .lastServiceOdometer(request.getInitialOdometer() != null ? request.getInitialOdometer() : 0)
                 .currency(request.getCurrency() != null ? request.getCurrency() : "$")
                 .user(user)

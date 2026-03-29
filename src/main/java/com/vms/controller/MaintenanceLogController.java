@@ -20,6 +20,13 @@ public class MaintenanceLogController {
 
     private final MaintenanceLogService maintenanceLogService;
 
+    @GetMapping("/activities/recent")
+    public ResponseEntity<List<MaintenanceLogResponse>> getRecent(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestParam(defaultValue = "5") int limit) {
+        return ResponseEntity.ok(maintenanceLogService.getRecentLogs(userDetails.getId(), limit));
+    }
+
     @GetMapping("/{vehicleId}")
     public ResponseEntity<List<MaintenanceLogResponse>> getLogs(
             @AuthenticationPrincipal UserDetailsImpl userDetails,

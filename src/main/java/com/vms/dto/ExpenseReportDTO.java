@@ -24,6 +24,7 @@ public class ExpenseReportDTO {
         private String period;
         private Double totalCost;
         private Double totalFuel;
+        private Double maintenanceCost;
         private Integer fillUps;
         private Double averageFuelEconomy;
     }
@@ -35,6 +36,7 @@ public class ExpenseReportDTO {
     public static class Summary {
         private Double totalCost;
         private Double totalFuel;
+        private Double maintenanceCost;
         private Double averageCostPerKm;
         private Double totalDistance;
     }

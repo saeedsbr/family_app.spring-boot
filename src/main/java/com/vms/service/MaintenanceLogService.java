@@ -23,6 +23,16 @@ public class MaintenanceLogService {
     private final VehicleAccessService vehicleAccessService;
 
     @Transactional(readOnly = true)
+    public List<MaintenanceLogResponse> getRecentLogs(UUID userId, int limit) {
+        return maintenanceLogRepository
+                .findByVehicleUserIdOrderByServiceDateDesc(userId,
+                        org.springframework.data.domain.PageRequest.of(0, limit))
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<MaintenanceLogResponse> getLogsByVehicleId(UUID userId, UUID vehicleId) {
         if (!vehicleAccessService.canUserAccessVehicle(userId, vehicleId)) {
             throw new RuntimeException("You do not have permission to view logs for this vehicle");

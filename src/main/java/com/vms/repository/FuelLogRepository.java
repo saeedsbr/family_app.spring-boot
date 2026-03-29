@@ -16,6 +16,8 @@ public interface FuelLogRepository extends JpaRepository<FuelLog, UUID> {
 
         List<FuelLog> findByVehicleIdOrderByLogDateDesc(UUID vehicleId);
 
+        java.util.Optional<FuelLog> findFirstByVehicleIdOrderByLogDateDesc(UUID vehicleId);
+
         List<FuelLog> findByVehicleIdAndLogDateBetweenOrderByLogDateAsc(
                         UUID vehicleId, LocalDateTime startDate, LocalDateTime endDate);
 

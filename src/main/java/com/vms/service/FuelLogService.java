@@ -77,8 +77,23 @@ public class FuelLogService {
                 .vehicle(vehicle)
                 .build();
 
+        // Calculate fuel economy
+        Double fuelEconomy = null;
+        if (log.getFuelAmount() != null && log.getFuelAmount() > 0) {
+            Integer previousOdometer = fuelLogRepository.findFirstByVehicleIdOrderByLogDateDesc(vehicleId)
+                    .map(FuelLog::getOdometer)
+                    .orElse(vehicle.getInitialOdometer());
+
+            if (previousOdometer != null && log.getOdometer() > previousOdometer) {
+                double distance = log.getOdometer() - previousOdometer;
+                fuelEconomy = distance / log.getFuelAmount();
+            }
+        }
+        log.setFuelEconomy(fuelEconomy);
+
         // Update vehicle odometer if new reading is higher
-        if (request.getOdometer() != null && request.getOdometer() > vehicle.getCurrentOdometer()) {
+        if (request.getOdometer() != null
+                && (vehicle.getCurrentOdometer() == null || request.getOdometer() > vehicle.getCurrentOdometer())) {
             vehicle.setCurrentOdometer(request.getOdometer());
             vehicleRepository.save(vehicle);
         }
@@ -88,14 +103,6 @@ public class FuelLogService {
     }
 
     private FuelLogResponse mapToResponse(FuelLog log) {
-        // Calculate fuel economy (km per liter) if we have enough data
-        Double fuelEconomy = null;
-        if (log.getFuelAmount() != null && log.getFuelAmount() > 0) {
-            // Simple approximation: distance / fuel
-            // For better accuracy we'd need previous odometer reading
-            fuelEconomy = null; // Will be calculated properly in reports
-        }
-
         return FuelLogResponse.builder()
                 .id(log.getId())
                 .vehicleId(log.getVehicle().getId())
@@ -103,7 +110,7 @@ public class FuelLogService {
                 .fuelAmount(log.getFuelAmount())
                 .totalCost(log.getTotalCost())
                 .logDate(log.getLogDate() != null ? log.getLogDate().toString() : null)
-                .fuelEconomy(fuelEconomy)
+                .fuelEconomy(log.getFuelEconomy())
                 .createdAt(log.getCreatedAt() != null ? log.getCreatedAt().toString() : null)
                 .build();
     }

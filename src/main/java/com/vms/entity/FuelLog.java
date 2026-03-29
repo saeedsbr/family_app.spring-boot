@@ -26,6 +26,7 @@ public class FuelLog {
     private Double fuelAmount;
     private Double totalCost;
     private LocalDateTime logDate;
+    private Double fuelEconomy;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
