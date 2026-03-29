@@ -8,8 +8,8 @@
 		<version>3.2.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.vms</groupId>
-	<artifactId>vehicle-management-system</artifactId>
+	<groupId>com.lifepulse</groupId>
+	<artifactId>life-pulse</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>life-pulse</name>
 	<description>Life Pulse Personal Management System Backend</description>
