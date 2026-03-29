@@ -1,16 +1,8 @@
 package com.lifepulse.service;
 
-import com.lifepulse.dto.AuthResponse;
-import com.lifepulse.dto.LoginRequest;
-import com.lifepulse.dto.RegisterRequest;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
-import com.lifepulse.entity.PasswordResetToken;
-import com.lifepulse.entity.User;
-import com.lifepulse.repository.PasswordResetTokenRepository;
-import com.lifepulse.repository.UserRepository;
-import com.lifepulse.security.JwtUtils;
-import com.lifepulse.security.UserDetailsImpl;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,8 +11,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.lifepulse.dto.AuthResponse;
+import com.lifepulse.dto.LoginRequest;
+import com.lifepulse.dto.RegisterRequest;
+import com.lifepulse.entity.PasswordResetToken;
+import com.lifepulse.entity.User;
+import com.lifepulse.repository.PasswordResetTokenRepository;
+import com.lifepulse.repository.UserRepository;
+import com.lifepulse.security.JwtUtils;
+import com.lifepulse.security.UserDetailsImpl;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -117,5 +118,38 @@ public class AuthService {
 
         // Delete used token
         tokenRepository.delete(resetToken);
+    }
+
+    @Transactional
+    public AuthResponse googleLogin(String email, String name) {
+        String normalizedEmail = email.toLowerCase();
+        User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .email(normalizedEmail)
+                            .name(name)
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString())) // Random password for
+                                                                                            // social users
+                            .currency("$")
+                            .build();
+                    return userRepository.save(newUser);
+                });
+
+        // Generate JWT for the user
+        UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        return AuthResponse.builder()
+                .accessToken(jwt)
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .currency(user.getCurrency())
+                .logoUrl(user.getLogoUrl())
+                .build();
     }
 }
