@@ -1,5 +1,15 @@
 package com.lifepulse.service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.lifepulse.dto.MeterReadingRequest;
 import com.lifepulse.dto.MeterReadingResponse;
 import com.lifepulse.entity.Meter;
@@ -10,14 +20,8 @@ import com.lifepulse.repository.MeterAccessRepository;
 import com.lifepulse.repository.MeterReadingRepository;
 import com.lifepulse.repository.MeterRepository;
 import com.lifepulse.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +35,34 @@ public class MeterReadingService {
         public List<MeterReadingResponse> getReadingsForMeter(UUID meterId, UUID userId) {
                 Meter meter = validateMeterAccess(meterId, userId);
                 return readingRepository.findByMeterOrderByReadingDateDesc(meter).stream()
+                                .map(this::mapToResponse)
+                                .collect(Collectors.toList());
+        }
+
+        public List<MeterReadingResponse> getAllReadingsForUser(UUID userId) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                // Get owned meters
+                List<Meter> ownedMeters = meterRepository.findByOwner(user);
+
+                // Get accessible meters
+                List<Meter> accessibleMeters = accessRepository
+                                .findByUserAndAccessStatus(user, MeterAccess.AccessStatus.APPROVED)
+                                .stream()
+                                .map(MeterAccess::getMeter)
+                                .collect(Collectors.toList());
+
+                // Combine them
+                List<Meter> allMeters = Stream.concat(ownedMeters.stream(), accessibleMeters.stream())
+                                .distinct()
+                                .collect(Collectors.toList());
+
+                if (allMeters.isEmpty()) {
+                        return new ArrayList<>();
+                }
+
+                return readingRepository.findByMeterInOrderByReadingDateDesc(allMeters).stream()
                                 .map(this::mapToResponse)
                                 .collect(Collectors.toList());
         }
@@ -87,7 +119,8 @@ public class MeterReadingService {
                                 .map(req -> {
                                         MeterReadingRequest r = new MeterReadingRequest();
                                         r.setReadingValue(java.math.BigDecimal.valueOf(req.getReadingValue()));
-                                        r.setReadingDate(java.time.LocalDate.parse(req.getReadingDate().substring(0, 10)));
+                                        r.setReadingDate(java.time.LocalDate
+                                                        .parse(req.getReadingDate().substring(0, 10)));
                                         r.setRecordedByManual(req.getRecordedByManual());
                                         r.setNotes(req.getNotes());
                                         return submitReading(req.getMeterId(), r, userId);

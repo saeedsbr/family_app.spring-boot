@@ -1,16 +1,20 @@
 package com.lifepulse.controller;
 
-import com.lifepulse.dto.MeterRequest;
-import com.lifepulse.dto.MeterResponse;
-import com.lifepulse.security.UserDetailsImpl;
-import com.lifepulse.service.MeterService;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
+import com.lifepulse.dto.MeterReadingResponse;
+import com.lifepulse.dto.MeterRequest;
+import com.lifepulse.dto.MeterResponse;
+import com.lifepulse.security.UserDetailsImpl;
+import com.lifepulse.service.MeterReadingService;
+import com.lifepulse.service.MeterService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/meters")
@@ -18,10 +22,17 @@ import java.util.UUID;
 public class MeterController {
 
     private final MeterService meterService;
+    private final MeterReadingService meterReadingService;
 
     @GetMapping
     public ResponseEntity<List<MeterResponse>> getAllMeters(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseEntity.ok(meterService.getAllMetersForUser(userDetails.getId()));
+    }
+
+    @GetMapping("/readings/history")
+    public ResponseEntity<List<MeterReadingResponse>> getAllReadingsHistory(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(meterReadingService.getAllReadingsForUser(userDetails.getId()));
     }
 
     @GetMapping("/{id}")
