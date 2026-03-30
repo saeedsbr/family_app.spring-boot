@@ -1,20 +1,22 @@
 package com.lifepulse.controller;
 
-import com.lifepulse.dto.MaintenanceLogRequest;
-import com.lifepulse.dto.MaintenanceLogResponse;
-import com.lifepulse.security.UserDetailsImpl;
-import com.lifepulse.service.MaintenanceLogService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
+import com.lifepulse.dto.MaintenanceLogRequest;
+import com.lifepulse.dto.MaintenanceLogResponse;
+import com.lifepulse.security.UserDetailsImpl;
+import com.lifepulse.service.MaintenanceLogService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/maintenance")
+@RequestMapping("/api/maintenance-logs")
 @RequiredArgsConstructor
 public class MaintenanceLogController {
 
