@@ -26,8 +26,7 @@ public class CommitteeRequest {
     @NotNull
     private CommitteeFrequency frequency;
 
-    // How often the pot is given to the next person in rotation
-    @NotNull
+    // How often the pot is given to the next person in rotation (defaults to frequency if not set)
     private CommitteeFrequency payoutFrequency;
 
     // The date Cycle 1 begins; subsequent cycle dates are derived from this + payoutFrequency
