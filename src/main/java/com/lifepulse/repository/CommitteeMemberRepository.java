@@ -15,8 +15,15 @@ public interface CommitteeMemberRepository extends JpaRepository<CommitteeMember
 
     List<CommitteeMember> findByCommittee(Committee committee);
 
+    List<CommitteeMember> findByCommitteeAndStatus(Committee committee, CommitteeMember.MemberStatus status);
+
     Optional<CommitteeMember> findByCommitteeAndUser(Committee committee, User user);
+
+    Optional<CommitteeMember> findByCommitteeAndUserAndStatus(Committee committee, User user,
+            CommitteeMember.MemberStatus status);
 
     // Find who's turn is in a specific cycle
     Optional<CommitteeMember> findByCommitteeAndTurnCycle(Committee committee, int turnCycle);
+
+    long countByCommitteeAndStatus(Committee committee, CommitteeMember.MemberStatus status);
 }

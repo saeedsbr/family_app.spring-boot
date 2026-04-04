@@ -1,6 +1,7 @@
 package com.lifepulse.dto;
 
 import com.lifepulse.entity.CommitteeMember.MemberRole;
+import com.lifepulse.entity.CommitteeMember.MemberStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,5 +17,6 @@ public class CommitteeMemberResponse {
     private int turnCycle;
     private boolean hasReceivedPot;
     private MemberRole role;
+    private MemberStatus status;
     private LocalDateTime joinedAt;
 }

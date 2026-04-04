@@ -106,6 +106,76 @@ public class CommitteeService {
         }
 
         @Transactional
+        public void joinCommittee(UUID committeeId, UUID userId) {
+                Committee committee = committeeRepository.findById(committeeId)
+                                .orElseThrow(() -> new RuntimeException("Committee not found"));
+                User user = userRepository.findById(userId).orElseThrow();
+
+                // Check if already a member or requester
+                if (committeeMemberRepository.findByCommitteeAndUser(committee, user).isPresent()) {
+                        throw new RuntimeException("Already a member or request pending");
+                }
+
+                // Check capacity
+                long approvedCount = committeeMemberRepository.countByCommitteeAndStatus(committee,
+                                CommitteeMember.MemberStatus.APPROVED);
+                if (approvedCount >= committee.getTotalMembers()) {
+                        throw new RuntimeException("Committee is full");
+                }
+
+                CommitteeMember joinRequest = CommitteeMember.builder()
+                                .committee(committee)
+                                .user(user)
+                                .status(CommitteeMember.MemberStatus.PENDING)
+                                .role(CommitteeMember.MemberRole.MEMBER)
+                                .turnCycle(0) // No turn assigned yet
+                                .build();
+
+                committeeMemberRepository.save(joinRequest);
+        }
+
+        @Transactional
+        public void approveJoinRequest(UUID memberId, int turn, UUID organizerId) {
+                CommitteeMember member = committeeMemberRepository.findById(memberId)
+                                .orElseThrow(() -> new RuntimeException("Join request not found"));
+                Committee committee = member.getCommittee();
+
+                if (!committee.getCreatedBy().getId().equals(organizerId)) {
+                        throw new RuntimeException("Only the organizer can approve requests");
+                }
+
+                if (member.getStatus() != CommitteeMember.MemberStatus.PENDING) {
+                        throw new RuntimeException("Request is not in PENDING state");
+                }
+
+                // Check capacity again
+                long approvedCount = committeeMemberRepository.countByCommitteeAndStatus(committee,
+                                CommitteeMember.MemberStatus.APPROVED);
+                if (approvedCount >= committee.getTotalMembers()) {
+                        throw new RuntimeException("Committee is full");
+                }
+
+                // Verify turn is not taken
+                if (committeeMemberRepository.findByCommitteeAndTurnCycle(committee, turn).isPresent()) {
+                        throw new RuntimeException("Turn " + turn + " is already assigned");
+                }
+
+                member.setStatus(CommitteeMember.MemberStatus.APPROVED);
+                member.setTurnCycle(turn);
+                committeeMemberRepository.save(member);
+        }
+
+        public List<CommitteeResponse> getAvailableCommittees() {
+                // Return active committees that have space
+                return committeeRepository.findAll().stream()
+                                .filter(c -> c.getStatus() == Committee.CommitteeStatus.ACTIVE)
+                                .filter(c -> committeeMemberRepository.countByCommitteeAndStatus(c,
+                                                CommitteeMember.MemberStatus.APPROVED) < c.getTotalMembers())
+                                .map(this::mapToResponse)
+                                .collect(Collectors.toList());
+        }
+
+        @Transactional
         public CommitteeTransactionResponse markPaid(UUID committeeId, CommitteePaymentRequest request,
                         UUID organizerId) {
                 User organizer = userRepository.findById(organizerId).orElseThrow();
@@ -242,6 +312,7 @@ public class CommitteeService {
                                 .turnCycle(member.getTurnCycle())
                                 .hasReceivedPot(member.isHasReceivedPot())
                                 .role(member.getRole())
+                                .status(member.getStatus())
                                 .joinedAt(member.getJoinedAt())
                                 .build();
         }

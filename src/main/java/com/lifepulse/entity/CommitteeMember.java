@@ -49,6 +49,11 @@ public class CommitteeMember {
     @Builder.Default
     private MemberRole role = MemberRole.MEMBER;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private MemberStatus status = MemberStatus.APPROVED;
+
     private LocalDateTime joinedAt;
 
     @PrePersist
@@ -59,5 +64,9 @@ public class CommitteeMember {
 
     public enum MemberRole {
         ORGANIZER, CO_ADMIN, MEMBER, OBSERVER
+    }
+
+    public enum MemberStatus {
+        PENDING, APPROVED, REJECTED
     }
 }

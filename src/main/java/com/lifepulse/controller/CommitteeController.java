@@ -61,4 +61,23 @@ public class CommitteeController {
             @AuthenticationPrincipal UserDetailsImpl user) {
         return ResponseEntity.ok(committeeService.getTransactions(id));
     }
+
+    @GetMapping("/available")
+    public ResponseEntity<List<CommitteeResponse>> getAvailable(@AuthenticationPrincipal UserDetailsImpl user) {
+        return ResponseEntity.ok(committeeService.getAvailableCommittees());
+    }
+
+    @PostMapping("/{id}/join")
+    public ResponseEntity<Void> join(@PathVariable UUID id, @AuthenticationPrincipal UserDetailsImpl user) {
+        committeeService.joinCommittee(id, user.getId());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/request/{memberId}/approve")
+    public ResponseEntity<Void> approve(@PathVariable UUID memberId,
+            @RequestBody CommitteeJoinApprovalRequest request,
+            @AuthenticationPrincipal UserDetailsImpl user) {
+        committeeService.approveJoinRequest(memberId, request.getTurn(), user.getId());
+        return ResponseEntity.ok().build();
+    }
 }
