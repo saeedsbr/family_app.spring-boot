@@ -20,4 +20,6 @@ public interface MeterReadingRepository extends JpaRepository<MeterReading, UUID
     Optional<MeterReading> findFirstByMeterAndReadingDateLessThanOrderByReadingDateDesc(Meter meter, LocalDate date);
 
     Optional<MeterReading> findFirstByMeterOrderByReadingDateDesc(Meter meter);
+
+    Optional<MeterReading> findFirstByMeterAndReadingDateGreaterThanOrderByReadingDateAsc(Meter meter, LocalDate date);
 }

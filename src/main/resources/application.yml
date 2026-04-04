@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: mysql
   main:
     allow-bean-definition-overriding: true
   mail:
@@ -39,7 +39,6 @@ spring:
   h2:
     console:
       enabled: true
-
 ---
 spring:
   config:

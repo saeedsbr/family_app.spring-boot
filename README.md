@@ -1,6 +1,12 @@
 # Life Pulse Backend: Personal Management System API
 
-The **Life Pulse Backend** is a Spring Boot application that serves as the central API for the Life Pulse ecosystem. It handles authentication, data management for vehicles and utility meters, and collaborative access control.
+The **Life Pulse Backend** is a Spring Boot application serving as the central API for the ecosystem.
+
+### Core Modules
+- **Vehicle Hub**: Fleet management, fuel logging, and maintenance tracking.
+- **Meter Pro**: Utility (electricity, gas, water) consumption tracking.
+- **Budget Tracker**: Financial management with transactions, categories, and sharing.
+- **Collaborative Access**: Granular control for family sharing across all modules.
 
 ## 🛠️ Technology Stack
 
@@ -47,6 +53,14 @@ The API uses JWT-based authentication. Most endpoints require an `Authorization:
 
 - **Login**: `POST /api/auth/signin`
 - **Register**: `POST /api/auth/signup`
+
+## 👤 User Profile & Preferences
+
+The API supports managing user identity and global preferences:
+
+- **Update Profile**: `PUT /api/users/profile`
+    - **Fields**: `name`, `currency`, `logoUrl`.
+    - **Description**: Updates the user's display name, preferred currency, and avatar URL. These changes are reflected across all family management modules.
 
 ## 📖 API Documentation
 

@@ -113,6 +113,48 @@ public class MeterReadingService {
         }
 
         @Transactional
+        public MeterReadingResponse updateReading(UUID readingId, MeterReadingRequest request, UUID userId) {
+                MeterReading reading = readingRepository.findById(readingId)
+                                .orElseThrow(() -> new RuntimeException("Reading not found"));
+
+                validateMeterAccess(reading.getMeter().getId(), userId);
+
+                // Update basic fields
+                reading.setReadingValue(request.getReadingValue());
+                reading.setReadingDate(request.getReadingDate());
+                reading.setNotes(request.getNotes());
+                if (request.getRecordedByManual() != null) {
+                        reading.setRecordedByManual(request.getRecordedByManual());
+                }
+
+                // 1. Recalculate this reading's consumption
+                MeterReading previousReading = readingRepository
+                                .findFirstByMeterAndReadingDateLessThanOrderByReadingDateDesc(reading.getMeter(),
+                                                reading.getReadingDate())
+                                .orElse(null);
+
+                if (previousReading != null) {
+                        reading.setConsumption(reading.getReadingValue().subtract(previousReading.getReadingValue()));
+                } else {
+                        reading.setConsumption(BigDecimal.ZERO);
+                }
+
+                // 2. Recalculate next reading's consumption (if any)
+                MeterReading nextReading = readingRepository
+                                .findFirstByMeterAndReadingDateGreaterThanOrderByReadingDateAsc(reading.getMeter(),
+                                                reading.getReadingDate())
+                                .orElse(null);
+
+                if (nextReading != null) {
+                        nextReading.setConsumption(nextReading.getReadingValue().subtract(reading.getReadingValue()));
+                        readingRepository.save(nextReading);
+                }
+
+                reading = readingRepository.save(reading);
+                return mapToResponse(reading);
+        }
+
+        @Transactional
         public List<MeterReadingResponse> submitBulkReadings(List<com.lifepulse.dto.MeterReadingBulkRequest> requests,
                         UUID userId) {
                 return requests.stream()
