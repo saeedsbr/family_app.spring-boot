@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,9 +32,10 @@ public class CommitteeService {
                 .totalMembers(request.getTotalMembers())
                 .amountPerMember(request.getAmountPerMember())
                 .frequency(request.getFrequency())
+                .payoutFrequency(request.getPayoutFrequency())
                 .totalCycles(request.getTotalMembers()) // total cycles = total members
                 .currentCycle(1)
-                .startDate(request.getStartDate())
+                .startDate(request.getStartDate() != null ? request.getStartDate() : LocalDate.now())
                 .status(Committee.CommitteeStatus.ACTIVE)
                 .createdBy(organizer)
                 .build();
@@ -201,6 +203,7 @@ public class CommitteeService {
                 .totalMembers(committee.getTotalMembers())
                 .amountPerMember(committee.getAmountPerMember())
                 .frequency(committee.getFrequency())
+                .payoutFrequency(committee.getPayoutFrequency())
                 .totalCycles(committee.getTotalCycles())
                 .currentCycle(committee.getCurrentCycle())
                 .startDate(committee.getStartDate())

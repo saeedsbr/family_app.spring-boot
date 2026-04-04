@@ -22,10 +22,15 @@ public class CommitteeRequest {
     @NotNull
     private BigDecimal amountPerMember;
 
+    // How often members pay their contribution
     @NotNull
     private CommitteeFrequency frequency;
 
-    // The date Cycle 1 begins; subsequent cycle dates are derived from this + frequency
+    // How often the pot is given to the next person in rotation
+    @NotNull
+    private CommitteeFrequency payoutFrequency;
+
+    // The date Cycle 1 begins; subsequent cycle dates are derived from this + payoutFrequency
     private LocalDate startDate;
 
     // Optional initial members and their fixed rotation order (by email)

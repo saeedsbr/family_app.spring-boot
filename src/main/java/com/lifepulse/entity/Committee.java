@@ -36,9 +36,15 @@ public class Committee {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amountPerMember;
 
+    // How often members pay their contribution
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CommitteeFrequency frequency;
+
+    // How often the pot is given to the next person in rotation
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CommitteeFrequency payoutFrequency;
 
     @Column(nullable = false)
     private int totalCycles;
@@ -84,7 +90,7 @@ public class Committee {
     }
 
     public enum CommitteeFrequency {
-        DAILY, WEEKLY, BIWEEKLY, MONTHLY
+        DAILY, WEEKLY, BIWEEKLY, MONTHLY, QUARTERLY, SEMI_ANNUAL, YEARLY
     }
 
     public enum CommitteeStatus {

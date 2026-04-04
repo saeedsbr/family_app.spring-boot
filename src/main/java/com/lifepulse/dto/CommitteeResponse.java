@@ -19,7 +19,8 @@ public class CommitteeResponse {
     private String currency;
     private int totalMembers;
     private BigDecimal amountPerMember;
-    private CommitteeFrequency frequency;
+    private CommitteeFrequency frequency;       // contribution payment interval
+    private CommitteeFrequency payoutFrequency; // pot distribution interval
     private int totalCycles;
     private int currentCycle;
     private LocalDate startDate;
