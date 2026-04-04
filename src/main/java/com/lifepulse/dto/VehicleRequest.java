@@ -11,6 +11,7 @@ public class VehicleRequest {
     private String model;
     private Integer modelYear;
     private String licensePlate;
+    private String color;
     private String currency;
     private Integer initialOdometer;
 }

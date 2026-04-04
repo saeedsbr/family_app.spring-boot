@@ -35,6 +35,7 @@ public class Vehicle {
     private String model;
     private Integer modelYear;
     private String licensePlate;
+    private String color;
 
     @Builder.Default
     private String currency = "$";

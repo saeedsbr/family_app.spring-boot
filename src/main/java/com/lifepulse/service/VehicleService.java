@@ -67,6 +67,7 @@ public class VehicleService {
                 .licensePlate(request.getLicensePlate() != null
                         ? request.getLicensePlate().trim().toUpperCase()
                         : null)
+                .color(request.getColor())
                 .initialOdometer(request.getInitialOdometer())
                 .currentOdometer(request.getInitialOdometer())
                 .lastServiceOdometer(request.getInitialOdometer() != null ? request.getInitialOdometer() : 0)
@@ -94,10 +95,12 @@ public class VehicleService {
         vehicle.setBrand(request.getBrand());
         vehicle.setModel(request.getModel());
         vehicle.setModelYear(request.getModelYear());
+        vehicle.setColor(request.getColor());
         if (request.getLicensePlate() != null) {
             vehicle.setLicensePlate(request.getLicensePlate().trim().toUpperCase());
         }
         if (request.getInitialOdometer() != null) {
+            vehicle.setInitialOdometer(request.getInitialOdometer());
             vehicle.setCurrentOdometer(request.getInitialOdometer());
         }
 
@@ -147,6 +150,8 @@ public class VehicleService {
                 .model(vehicle.getModel())
                 .modelYear(vehicle.getModelYear())
                 .licensePlate(vehicle.getLicensePlate())
+                .color(vehicle.getColor())
+                .initialOdometer(vehicle.getInitialOdometer())
                 .currentOdometer(vehicle.getCurrentOdometer())
                 .lastServiceOdometer(vehicle.getLastServiceOdometer())
                 .currency(vehicle.getCurrency())
