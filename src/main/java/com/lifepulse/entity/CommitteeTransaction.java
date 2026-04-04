@@ -32,8 +32,12 @@ public class CommitteeTransaction {
 
     // The user making the payment or the defaulting user
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "from_user_id", nullable = false)
+    @JoinColumn(name = "from_user_id", nullable = true)
     private User fromUser;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = true)
+    private CommitteeMember member;
 
     // A string to indicate where the money goes, e.g. "organizer", "potReceiver",
     // or a UUID string

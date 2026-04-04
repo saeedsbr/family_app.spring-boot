@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 public class CommitteePaymentRequest {
     @NotNull
-    private UUID userId; // The user making the payment
+    private UUID memberId; // The member making the payment
 
     @NotNull
     private BigDecimal amount;

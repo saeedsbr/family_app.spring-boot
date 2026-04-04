@@ -5,5 +5,5 @@ import java.util.UUID;
 
 @Data
 public class CommitteeJoinApprovalRequest {
-    private int turn;
+    private int turnCycle;
 }

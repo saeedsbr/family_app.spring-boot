@@ -36,6 +36,13 @@ public class CommitteeController {
         return ResponseEntity.ok(committeeService.getCommitteeById(id, user.getId()));
     }
 
+    @PostMapping("/{id}/members")
+    public ResponseEntity<CommitteeMemberResponse> addMember(@PathVariable UUID id,
+            @Valid @RequestBody CommitteeRequest.MemberRequest request,
+            @AuthenticationPrincipal UserDetailsImpl user) {
+        return ResponseEntity.ok(committeeService.addMember(id, request, user.getId()));
+    }
+
     @PostMapping("/{id}/mark-paid")
     public ResponseEntity<CommitteeTransactionResponse> markPaid(@PathVariable UUID id,
             @Valid @RequestBody CommitteePaymentRequest request,

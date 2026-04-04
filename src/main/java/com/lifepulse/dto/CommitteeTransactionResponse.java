@@ -15,6 +15,8 @@ import java.util.UUID;
 public class CommitteeTransactionResponse {
     private UUID id;
     private UserResponse fromUser;
+    private String fromMemberName;
+    private UUID fromMemberId;
     private String toRecipient;
     private BigDecimal amount;
     private TransactionType type;

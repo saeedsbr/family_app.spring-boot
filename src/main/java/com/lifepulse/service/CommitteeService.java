@@ -176,23 +176,59 @@ public class CommitteeService {
         }
 
         @Transactional
+        public CommitteeMemberResponse addMember(UUID committeeId, CommitteeRequest.MemberRequest request,
+                        UUID organizerId) {
+                Committee committee = committeeRepository.findById(committeeId)
+                                .orElseThrow(() -> new RuntimeException("Committee not found"));
+
+                if (!committee.getCreatedBy().getId().equals(organizerId)) {
+                        throw new RuntimeException("Only the organizer can add members");
+                }
+
+                // Check capacity
+                long approvedCount = committeeMemberRepository.countByCommitteeAndStatus(committee,
+                                CommitteeMember.MemberStatus.APPROVED);
+                if (approvedCount >= committee.getTotalMembers()) {
+                        throw new RuntimeException("Committee is full. Increase total members first.");
+                }
+
+                // Verify turn is not taken
+                if (committeeMemberRepository.findByCommitteeAndTurnCycle(committee, request.getTurn()).isPresent()) {
+                        throw new RuntimeException("Turn " + request.getTurn() + " is already assigned");
+                }
+
+                CommitteeMember.CommitteeMemberBuilder memberBuilder = CommitteeMember.builder()
+                                .committee(committee)
+                                .turnCycle(request.getTurn())
+                                .role(CommitteeMember.MemberRole.MEMBER)
+                                .status(CommitteeMember.MemberStatus.APPROVED);
+
+                if (request.getEmail() != null && !request.getEmail().isBlank()) {
+                        userRepository.findByEmailIgnoreCase(request.getEmail())
+                                        .ifPresentOrElse(memberBuilder::user,
+                                                        () -> memberBuilder.customName(request.getName()));
+                } else {
+                        memberBuilder.customName(request.getName());
+                }
+
+                return mapToMemberResponse(committeeMemberRepository.save(memberBuilder.build()));
+        }
+
+        @Transactional
         public CommitteeTransactionResponse markPaid(UUID committeeId, CommitteePaymentRequest request,
                         UUID organizerId) {
                 User organizer = userRepository.findById(organizerId).orElseThrow();
                 Committee committee = committeeRepository.findById(committeeId)
                                 .orElseThrow(() -> new RuntimeException("Committee not found"));
 
-                User payer = userRepository.findById(request.getUserId())
-                                .orElseThrow(() -> new RuntimeException("User not found"));
-
-                // Only Organizer can mark physical cash, or this acts as wallet flow
-                CommitteeMember member = committeeMemberRepository.findByCommitteeAndUser(committee, payer)
-                                .orElseThrow(() -> new RuntimeException("Member not in committee"));
+                CommitteeMember member = committeeMemberRepository.findById(request.getMemberId())
+                                .orElseThrow(() -> new RuntimeException("Member not found"));
 
                 CommitteeTransaction transaction = CommitteeTransaction.builder()
                                 .committee(committee)
-                                .fromUser(payer)
-                                .toRecipient(committee.getCreatedBy().getId().toString()) // To organizer
+                                .fromUser(member.getUser()) // Can be null
+                                .member(member)
+                                .toRecipient("ORGANIZER") // Sent to organizer
                                 .amount(request.getAmount())
                                 .type(CommitteeTransaction.TransactionType.CONTRIBUTION)
                                 .cycleNumber(committee.getCurrentCycle())
@@ -258,14 +294,15 @@ public class CommitteeService {
                 Committee committee = committeeRepository.findById(committeeId)
                                 .orElseThrow(() -> new RuntimeException("Committee not found"));
 
-                User defaulter = userRepository.findById(request.getUserId())
-                                .orElseThrow(() -> new RuntimeException("Defaulter not found"));
+                CommitteeMember member = committeeMemberRepository.findById(request.getMemberId())
+                                .orElseThrow(() -> new RuntimeException("Member not found"));
 
                 // Organizer pays on behalf of defaulter
                 CommitteeTransaction coverTransaction = CommitteeTransaction.builder()
                                 .committee(committee)
                                 .fromUser(organizer)
-                                .toRecipient(committee.getCreatedBy().getId().toString()) // to the pot
+                                .member(member)
+                                .toRecipient("POT") // to the pot
                                 .amount(request.getAmount())
                                 .type(CommitteeTransaction.TransactionType.POT_COVER_BY_ORGANIZER)
                                 .cycleNumber(committee.getCurrentCycle())
@@ -329,7 +366,17 @@ public class CommitteeService {
         private CommitteeTransactionResponse mapToTransactionResponse(CommitteeTransaction transaction) {
                 return CommitteeTransactionResponse.builder()
                                 .id(transaction.getId())
-                                .fromUser(mapToUserResponse(transaction.getFromUser()))
+                                .fromUser(transaction.getFromUser() != null
+                                                ? mapToUserResponse(transaction.getFromUser())
+                                                : null)
+                                .fromMemberName(transaction.getMember() != null
+                                                ? (transaction.getMember().getUser() != null
+                                                                ? transaction.getMember().getUser().getName()
+                                                                : transaction.getMember().getCustomName())
+                                                : (transaction.getFromUser() != null
+                                                                ? transaction.getFromUser().getName()
+                                                                : "System"))
+                                .fromMemberId(transaction.getMember() != null ? transaction.getMember().getId() : null)
                                 .toRecipient(transaction.getToRecipient())
                                 .amount(transaction.getAmount())
                                 .type(transaction.getType())
