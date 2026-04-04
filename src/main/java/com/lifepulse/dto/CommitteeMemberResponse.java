@@ -12,6 +12,7 @@ import java.util.UUID;
 public class CommitteeMemberResponse {
     private UUID id;
     private UserResponse user;
+    private String customName;
     private int turnCycle;
     private boolean hasReceivedPot;
     private MemberRole role;

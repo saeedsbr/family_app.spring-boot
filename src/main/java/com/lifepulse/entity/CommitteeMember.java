@@ -32,8 +32,10 @@ public class CommitteeMember {
     private Committee committee;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
+
+    private String customName;
 
     @Column(nullable = false)
     private int turnCycle;

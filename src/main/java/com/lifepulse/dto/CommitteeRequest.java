@@ -26,12 +26,21 @@ public class CommitteeRequest {
     @NotNull
     private CommitteeFrequency frequency;
 
-    // How often the pot is given to the next person in rotation (defaults to frequency if not set)
+    // How often the pot is given to the next person in rotation (defaults to
+    // frequency if not set)
     private CommitteeFrequency payoutFrequency;
 
-    // The date Cycle 1 begins; subsequent cycle dates are derived from this + payoutFrequency
+    // The date Cycle 1 begins; subsequent cycle dates are derived from this +
+    // payoutFrequency
     private LocalDate startDate;
 
-    // Optional initial members and their fixed rotation order (by email)
-    private List<String> memberEmails;
+    // Optional initial members and their fixed rotation order
+    private List<MemberRequest> members;
+
+    @Data
+    public static class MemberRequest {
+        private String name;
+        private String email;
+        private int turn; // 1-indexed turn
+    }
 }

@@ -54,24 +54,35 @@ public class CommitteeService {
 
                 committeeMemberRepository.save(organizerMember);
 
-                // Optionally invite/add users from emails
-                final Committee savedCommittee = committee;
-                if (request.getMemberEmails() != null && !request.getMemberEmails().isEmpty()) {
-                        int cycle = 2;
-                        for (String email : request.getMemberEmails()) {
-                                if (cycle > savedCommittee.getTotalMembers())
-                                        break;
-                                final int turnCycle = cycle;
-                                userRepository.findByEmailIgnoreCase(email).ifPresent(user -> {
-                                        CommitteeMember newMember = CommitteeMember.builder()
-                                                        .committee(savedCommittee)
-                                                        .user(user)
-                                                        .turnCycle(turnCycle)
-                                                        .role(CommitteeMember.MemberRole.MEMBER)
-                                                        .build();
-                                        committeeMemberRepository.save(newMember);
-                                });
-                                cycle++;
+                // Optionally add members from the request list
+                if (request.getMembers() != null && !request.getMembers().isEmpty()) {
+                        for (CommitteeRequest.MemberRequest memberReq : request.getMembers()) {
+                                CommitteeMember.CommitteeMemberBuilder memberBuilder = CommitteeMember.builder()
+                                                .committee(committee)
+                                                .turnCycle(memberReq.getTurn())
+                                                .role(CommitteeMember.MemberRole.MEMBER);
+
+                                if (memberReq.getEmail() != null && !memberReq.getEmail().isBlank()) {
+                                        userRepository.findByEmailIgnoreCase(memberReq.getEmail())
+                                                        .ifPresentOrElse(memberBuilder::user, () -> memberBuilder
+                                                                        .customName(memberReq.getName()));
+                                } else {
+                                        memberBuilder.customName(memberReq.getName());
+                                }
+
+                                committeeMemberRepository.save(memberBuilder.build());
+                        }
+                } else {
+                        // Fallback: Default placeholder members if none provided (for UI backwards
+                        // compatibility if needed)
+                        for (int i = 2; i <= committee.getTotalMembers(); i++) {
+                                CommitteeMember placeholder = CommitteeMember.builder()
+                                                .committee(committee)
+                                                .turnCycle(i)
+                                                .customName("Member " + i)
+                                                .role(CommitteeMember.MemberRole.MEMBER)
+                                                .build();
+                                committeeMemberRepository.save(placeholder);
                         }
                 }
 
@@ -226,7 +237,8 @@ public class CommitteeService {
         private CommitteeMemberResponse mapToMemberResponse(CommitteeMember member) {
                 return CommitteeMemberResponse.builder()
                                 .id(member.getId())
-                                .user(mapToUserResponse(member.getUser()))
+                                .user(member.getUser() != null ? mapToUserResponse(member.getUser()) : null)
+                                .customName(member.getCustomName())
                                 .turnCycle(member.getTurnCycle())
                                 .hasReceivedPot(member.isHasReceivedPot())
                                 .role(member.getRole())
