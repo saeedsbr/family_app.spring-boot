@@ -75,9 +75,7 @@ public class WebSecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoder)
-                                .jwtAuthenticationConverter(keycloakJwtAuthenticationConverter)
-                        )
-                );
+                                .jwtAuthenticationConverter(keycloakJwtAuthenticationConverter)));
 
         // Fix for H2 console
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
@@ -91,11 +89,9 @@ public class WebSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:3001",
-                "http://localhost:8081"
-        ));
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:*",
+                "https://*.sabthings.com"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(
                 Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
