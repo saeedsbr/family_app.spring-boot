@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.lifepulse.dto.MaintenanceLogRequest;
 import com.lifepulse.dto.MaintenanceLogResponse;
-import com.lifepulse.security.UserDetailsImpl;
+import com.lifepulse.service.CurrentUserService;
 import com.lifepulse.service.MaintenanceLogService;
 
 import jakarta.validation.Valid;
@@ -21,34 +21,39 @@ import lombok.RequiredArgsConstructor;
 public class MaintenanceLogController {
 
     private final MaintenanceLogService maintenanceLogService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping("/activities/recent")
     public ResponseEntity<List<MaintenanceLogResponse>> getRecent(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @RequestParam(defaultValue = "5") int limit) {
-        return ResponseEntity.ok(maintenanceLogService.getRecentLogs(userDetails.getId(), limit));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(maintenanceLogService.getRecentLogs(userId, limit));
     }
 
     @GetMapping("/{vehicleId}")
     public ResponseEntity<List<MaintenanceLogResponse>> getLogs(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @PathVariable UUID vehicleId) {
-        return ResponseEntity.ok(maintenanceLogService.getLogsByVehicleId(userDetails.getId(), vehicleId));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(maintenanceLogService.getLogsByVehicleId(userId, vehicleId));
     }
 
     @PostMapping("/{vehicleId}")
     public ResponseEntity<MaintenanceLogResponse> addLog(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @PathVariable UUID vehicleId,
             @Valid @RequestBody MaintenanceLogRequest request) {
-        return ResponseEntity.ok(maintenanceLogService.addLog(userDetails.getId(), vehicleId, request));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(maintenanceLogService.addLog(userId, vehicleId, request));
     }
 
     @DeleteMapping("/{logId}")
     public ResponseEntity<Void> deleteLog(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @PathVariable UUID logId) {
-        maintenanceLogService.deleteLog(userDetails.getId(), logId);
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        maintenanceLogService.deleteLog(userId, logId);
         return ResponseEntity.noContent().build();
     }
 }

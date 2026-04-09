@@ -2,11 +2,11 @@ package com.lifepulse.controller;
 
 import com.lifepulse.dto.VehicleAccessRequestDTO;
 import com.lifepulse.dto.VehicleAccessResponse;
-import com.lifepulse.security.UserDetailsImpl;
+import com.lifepulse.service.CurrentUserService;
 import com.lifepulse.service.VehicleAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,48 +19,55 @@ import java.util.UUID;
 public class VehicleAccessController {
 
     private final VehicleAccessService vehicleAccessService;
+    private final CurrentUserService currentUserService;
 
     @PostMapping("/request")
     public ResponseEntity<VehicleAccessResponse> requestAccess(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @RequestBody VehicleAccessRequestDTO request) {
-        return ResponseEntity.ok(vehicleAccessService.requestAccess(userDetails.getId(), request.getLicensePlate()));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(vehicleAccessService.requestAccess(userId, request.getLicensePlate()));
     }
 
     @GetMapping("/pending")
     public ResponseEntity<List<VehicleAccessResponse>> getPendingRequests(
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(vehicleAccessService.getPendingRequestsForOwner(userDetails.getId()));
+            Authentication authentication) {
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(vehicleAccessService.getPendingRequestsForOwner(userId));
     }
 
     @PutMapping("/{id}/approve")
     public ResponseEntity<VehicleAccessResponse> approveRequest(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @PathVariable UUID id) {
-        return ResponseEntity.ok(vehicleAccessService.approveRequest(userDetails.getId(), id));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(vehicleAccessService.approveRequest(userId, id));
     }
 
     @PutMapping("/{id}/reject")
     public ResponseEntity<VehicleAccessResponse> rejectRequest(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @PathVariable UUID id) {
-        return ResponseEntity.ok(vehicleAccessService.rejectRequest(userDetails.getId(), id));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(vehicleAccessService.rejectRequest(userId, id));
     }
 
     @GetMapping("/my-requests")
     public ResponseEntity<List<VehicleAccessResponse>> getMyRequests(
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(vehicleAccessService.getMyRequests(userDetails.getId()));
+            Authentication authentication) {
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(vehicleAccessService.getMyRequests(userId));
     }
 
     // NEW: Owner invites a user by email to access their vehicle
     @PostMapping("/invite")
     public ResponseEntity<VehicleAccessResponse> inviteUser(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @RequestBody Map<String, String> body) {
+        UUID userId = currentUserService.getCurrentUserId(authentication);
         String email = body.get("email");
         String vehicleId = body.get("vehicleId");
         return ResponseEntity.ok(vehicleAccessService.inviteUserByEmail(
-                userDetails.getId(), email, UUID.fromString(vehicleId)));
+                userId, email, UUID.fromString(vehicleId)));
     }
 }

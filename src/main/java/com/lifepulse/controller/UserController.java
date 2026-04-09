@@ -5,10 +5,10 @@ import com.lifepulse.dto.ProfileRequest;
 import com.lifepulse.dto.UserResponse;
 import com.lifepulse.entity.User;
 import com.lifepulse.repository.UserRepository;
-import com.lifepulse.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,9 +19,18 @@ public class UserController {
 
     private final UserRepository userRepository;
 
+    private String extractEmail(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            String email = jwt.getClaimAsString("email");
+            if (email != null) return email;
+        }
+        return authentication.getName();
+    }
+
     @GetMapping("/profile")
-    public ResponseEntity<UserResponse> getProfile(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        User user = userRepository.findById(userDetails.getId())
+    public ResponseEntity<UserResponse> getProfile(Authentication authentication) {
+        String email = extractEmail(authentication);
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return ResponseEntity.ok(UserResponse.builder()
@@ -34,11 +43,9 @@ public class UserController {
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody ProfileRequest request) {
-
-        User user = userRepository.findById(userDetails.getId())
+    public ResponseEntity<?> updateProfile(Authentication authentication, @RequestBody ProfileRequest request) {
+        String email = extractEmail(authentication);
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setName(request.getName());

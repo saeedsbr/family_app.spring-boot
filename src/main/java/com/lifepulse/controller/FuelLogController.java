@@ -2,12 +2,12 @@ package com.lifepulse.controller;
 
 import com.lifepulse.dto.FuelLogRequest;
 import com.lifepulse.dto.FuelLogResponse;
-import com.lifepulse.security.UserDetailsImpl;
+import com.lifepulse.service.CurrentUserService;
 import com.lifepulse.service.FuelLogService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,26 +19,30 @@ import java.util.UUID;
 public class FuelLogController {
 
     private final FuelLogService fuelLogService;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
     public ResponseEntity<List<FuelLogResponse>> getLogs(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @RequestParam(required = false) UUID vehicleId) {
-        return ResponseEntity.ok(fuelLogService.getLogs(userDetails.getId(), vehicleId));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(fuelLogService.getLogs(userId, vehicleId));
     }
 
     @GetMapping("/recent")
     public ResponseEntity<List<FuelLogResponse>> getRecent(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @RequestParam(defaultValue = "5") int limit) {
-        return ResponseEntity.ok(fuelLogService.getRecentLogs(userDetails.getId(), limit));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(fuelLogService.getRecentLogs(userId, limit));
     }
 
     @PostMapping("/{vehicleId}")
     public ResponseEntity<FuelLogResponse> addLog(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @PathVariable UUID vehicleId,
             @Valid @RequestBody FuelLogRequest request) {
-        return ResponseEntity.ok(fuelLogService.addLog(userDetails.getId(), vehicleId, request));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(fuelLogService.addLog(userId, vehicleId, request));
     }
 }

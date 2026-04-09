@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.lifepulse.dto.AuthMeResponse;
 import com.lifepulse.dto.AuthResponse;
 import com.lifepulse.dto.LoginRequest;
 import com.lifepulse.dto.RegisterRequest;
@@ -22,9 +23,11 @@ import com.lifepulse.security.JwtUtils;
 import com.lifepulse.security.UserDetailsImpl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -33,28 +36,44 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final EmailService emailService;
+    private final KeycloakAdminService keycloakAdminService;
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         String email = request.getEmail().toLowerCase();
-        if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new RuntimeException("Email is already taken!");
+
+        // Check if email already exists in Keycloak (registered via sabthings or this app)
+        if (keycloakAdminService.emailExistsInKeycloak(email)) {
+            throw new IllegalArgumentException("KEYCLOAK_EXISTS");
         }
 
-        User user = User.builder()
-                .email(email)
-                .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getName())
-                .currency(request.getCurrency() != null ? request.getCurrency() : "$")
-                .logoUrl(request.getLogoUrl())
-                .build();
+        // Create user in Keycloak first
+        String keycloakUserId = keycloakAdminService.createKeycloakUser(
+                email, request.getPassword(), request.getName());
 
-        user = userRepository.save(user);
+        // Create local user with link to Keycloak identity
+        try {
+            User user = User.builder()
+                    .email(email)
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString())) // auth is via Keycloak
+                    .name(request.getName())
+                    .currency(request.getCurrency() != null ? request.getCurrency() : "$")
+                    .logoUrl(request.getLogoUrl())
+                    .keycloakId(keycloakUserId)
+                    .build();
+            user = userRepository.save(user);
+            log.info("Registered user {} with keycloakId {}", email, keycloakUserId);
 
-        // Auto login after registration
-        return login(LoginRequest.builder()
-                .email(email)
-                .password(request.getPassword())
-                .build());
+            return AuthResponse.builder()
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .name(user.getName())
+                    .build();
+        } catch (Exception e) {
+            // Compensate: remove from Keycloak to keep both systems consistent
+            keycloakAdminService.deleteKeycloakUser(keycloakUserId);
+            throw new RuntimeException("Registration failed. Please try again.");
+        }
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -74,6 +93,18 @@ public class AuthService {
                 .name(userDetails.getName())
                 .currency(userDetails.getCurrency())
                 .logoUrl(userDetails.getLogoUrl())
+                .build();
+    }
+
+    public AuthMeResponse getMe(String email) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return AuthMeResponse.builder()
+                .userId(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .currency(user.getCurrency())
+                .logoUrl(user.getLogoUrl())
                 .build();
     }
 
@@ -98,7 +129,7 @@ public class AuthService {
         tokenRepository.save(resetToken);
 
         // Send email (pointing to frontend URL)
-        String resetLink = "http://localhost:3000/reset-password?token=" + token;
+        String resetLink = "http://localhost:3001/reset-password?token=" + token;
         emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
     }
 
@@ -128,8 +159,7 @@ public class AuthService {
                     User newUser = User.builder()
                             .email(normalizedEmail)
                             .name(name)
-                            .password(passwordEncoder.encode(UUID.randomUUID().toString())) // Random password for
-                                                                                            // social users
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                             .currency("$")
                             .build();
                     return userRepository.save(newUser);

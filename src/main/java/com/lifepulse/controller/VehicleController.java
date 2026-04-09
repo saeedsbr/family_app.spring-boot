@@ -6,12 +6,12 @@ import com.lifepulse.dto.VehicleResponse;
 import com.lifepulse.repository.FuelLogRepository;
 import com.lifepulse.repository.MaintenanceLogRepository;
 import com.lifepulse.repository.VehicleRepository;
-import com.lifepulse.security.UserDetailsImpl;
+import com.lifepulse.service.CurrentUserService;
 import com.lifepulse.service.VehicleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,10 +27,12 @@ public class VehicleController {
     private final FuelLogRepository fuelLogRepository;
     private final MaintenanceLogRepository maintenanceLogRepository;
     private final VehicleRepository vehicleRepository;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
-    public ResponseEntity<List<VehicleResponse>> getAll(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(vehicleService.getAllByUserId(userDetails.getId()));
+    public ResponseEntity<List<VehicleResponse>> getAll(Authentication authentication) {
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(vehicleService.getAllByUserId(userId));
     }
 
     @GetMapping("/{id}")
@@ -41,30 +43,33 @@ public class VehicleController {
     @PostMapping
     public ResponseEntity<VehicleResponse> create(
             @Valid @RequestBody VehicleRequest request,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(vehicleService.create(request, userDetails.getId()));
+            Authentication authentication) {
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(vehicleService.create(request, userId));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<VehicleResponse> updateVehicle(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @PathVariable UUID id,
             @Valid @RequestBody VehicleRequest request) {
-        return ResponseEntity.ok(vehicleService.updateVehicle(userDetails.getId(), id, request));
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok(vehicleService.updateVehicle(userId, id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVehicle(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @PathVariable UUID id) {
-        vehicleService.deleteVehicle(userDetails.getId(), id);
+        UUID userId = currentUserService.getCurrentUserId(authentication);
+        vehicleService.deleteVehicle(userId, id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/expense-summary")
     public ResponseEntity<VehicleExpenseSummaryResponse> getExpenseSummary(
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        UUID userId = userDetails.getId();
+            Authentication authentication) {
+        UUID userId = currentUserService.getCurrentUserId(authentication);
         double fuelCost = fuelLogRepository.sumTotalCostByOwnerId(userId);
         double maintenanceCost = maintenanceLogRepository.sumCostByOwnerId(userId);
         int vehicleCount = vehicleRepository.findByUserId(userId).size();
@@ -78,10 +83,11 @@ public class VehicleController {
 
     @PostMapping("/{id}/reset-maintenance")
     public ResponseEntity<VehicleResponse> resetMaintenance(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            Authentication authentication,
             @PathVariable UUID id,
             @RequestBody Map<String, Integer> body) {
+        UUID userId = currentUserService.getCurrentUserId(authentication);
         int currentOdometer = body.getOrDefault("currentOdometer", 0);
-        return ResponseEntity.ok(vehicleService.resetMaintenance(userDetails.getId(), id, currentOdometer));
+        return ResponseEntity.ok(vehicleService.resetMaintenance(userId, id, currentOdometer));
     }
 }

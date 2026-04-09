@@ -3,10 +3,11 @@ package com.lifepulse.controller;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
+import com.lifepulse.dto.AuthMeResponse;
 import com.lifepulse.dto.AuthResponse;
 import com.lifepulse.dto.LoginRequest;
 import com.lifepulse.dto.RegisterRequest;
@@ -30,6 +31,18 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<AuthMeResponse> getMe(Authentication authentication) {
+        String email;
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            email = jwt.getClaimAsString("email");
+            if (email == null) email = authentication.getName();
+        } else {
+            email = authentication.getName();
+        }
+        return ResponseEntity.ok(authService.getMe(email));
     }
 
     @PostMapping("/forgot-password")

@@ -21,6 +21,13 @@ vms:
     secret: 9a4f2c8d3b7a1e5f8g9h0i1j2k3l4m5n6o7p8q9r0s1t2u3v4w5x6y7z8a9b0c1d
     expiration: 3600000 # 1 hour
 
+keycloak:
+  auth-server-url: https://auth.sabthings.com
+  realm: sabthings-realm
+  resource: family-app-client
+  credentials:
+    secret: oHyU56nHnvHSrlUSwSOqCT5MvJEqESSb
+
 ---
 spring:
   config:
@@ -45,7 +52,7 @@ spring:
     activate:
       on-profile: mysql
   datasource:
-    url: jdbc:mysql://localhost:3306/vehicle_main?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/lifepulse?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: root
     password: "rootroot"
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -64,3 +71,4 @@ server:
   error:
     include-message: always
     include-binding-errors: always
+  port : 8081

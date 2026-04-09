@@ -44,6 +44,9 @@ public class User {
 
     private String logoUrl;
 
+    @Column(name = "keycloak_id", unique = true)
+    private String keycloakId;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
