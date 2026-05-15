@@ -36,44 +36,30 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final EmailService emailService;
-    private final KeycloakAdminService keycloakAdminService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         String email = request.getEmail().toLowerCase();
 
-        // Check if email already exists in Keycloak (registered via sabthings or this app)
-        if (keycloakAdminService.emailExistsInKeycloak(email)) {
-            throw new IllegalArgumentException("KEYCLOAK_EXISTS");
+        if (userRepository.existsByEmailIgnoreCase(email)) {
+            throw new RuntimeException("Email is already taken!");
         }
 
-        // Create user in Keycloak first
-        String keycloakUserId = keycloakAdminService.createKeycloakUser(
-                email, request.getPassword(), request.getName());
+        User user = User.builder()
+                .email(email)
+                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.getName())
+                .currency(request.getCurrency() != null ? request.getCurrency() : "$")
+                .logoUrl(request.getLogoUrl())
+                .build();
 
-        // Create local user with link to Keycloak identity
-        try {
-            User user = User.builder()
-                    .email(email)
-                    .password(passwordEncoder.encode(UUID.randomUUID().toString())) // auth is via Keycloak
-                    .name(request.getName())
-                    .currency(request.getCurrency() != null ? request.getCurrency() : "$")
-                    .logoUrl(request.getLogoUrl())
-                    .keycloakId(keycloakUserId)
-                    .build();
-            user = userRepository.save(user);
-            log.info("Registered user {} with keycloakId {}", email, keycloakUserId);
+        user = userRepository.save(user);
+        log.info("Registered user {}", email);
 
-            return AuthResponse.builder()
-                    .id(user.getId())
-                    .email(user.getEmail())
-                    .name(user.getName())
-                    .build();
-        } catch (Exception e) {
-            // Compensate: remove from Keycloak to keep both systems consistent
-            keycloakAdminService.deleteKeycloakUser(keycloakUserId);
-            throw new RuntimeException("Registration failed. Please try again.");
-        }
+        return login(LoginRequest.builder()
+                .email(email)
+                .password(request.getPassword())
+                .build());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -115,10 +101,8 @@ public class AuthService {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
-        // Delete any existing token for the user
         tokenRepository.deleteByUser(user);
 
-        // Generate new token
         String token = UUID.randomUUID().toString();
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .token(token)
@@ -128,8 +112,7 @@ public class AuthService {
 
         tokenRepository.save(resetToken);
 
-        // Send email (pointing to frontend URL)
-        String resetLink = "http://localhost:3001/reset-password?token=" + token;
+        String resetLink = "https://lifepulse.sabthings.com/reset-password?token=" + token;
         emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
     }
 
@@ -147,7 +130,6 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        // Delete used token
         tokenRepository.delete(resetToken);
     }
 
@@ -165,7 +147,6 @@ public class AuthService {
                     return userRepository.save(newUser);
                 });
 
-        // Generate JWT for the user
         UserDetailsImpl userDetails = UserDetailsImpl.build(user);
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
