@@ -94,7 +94,7 @@ public class CommitteeController {
             @RequestBody CommitteeJoinApprovalRequest request,
             Authentication authentication) {
         UUID userId = currentUserService.getCurrentUserId(authentication);
-        committeeService.approveJoinRequest(memberId, request.getTurnCycle(), userId);
+        committeeService.approveJoinRequest(memberId, request.getTurn(), userId);
         return ResponseEntity.ok().build();
     }
 }
